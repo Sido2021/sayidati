@@ -24,7 +24,7 @@ class Answer {
 
   Map<String , dynamic> toJson() => {
     'UID' : user.uid ,
-    'QuestionID' : question.questionId ,
+    'QuestionID' : question.questionId.toString() ,
     'Answer' : answer
   };
 

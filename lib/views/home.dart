@@ -49,7 +49,7 @@ class _HomeState extends State<Home> {
   TextEditingController controller = TextEditingController();
 
   List<Questionnaire> userQuestionnaires = [] ;
-
+  AnswerService answerService = AnswerService();
   @override
   void initState() {
     super.initState();
@@ -84,10 +84,25 @@ class _HomeState extends State<Home> {
     Questionnaire q = await questionnaireService.getQuestionnaire();
     await q.loadQuestions();
     userQuestionnaires = await questionnaireService.getUserQuestionnaires();
+    answers = await answerService.getAnswersFromLocal(questionnaire);
+    questionnaire = q;
+    currentQuestion = q.questions[0];
 
+    loadCurrentQuestion();
+  }
+
+  loadCurrentQuestion(){
     setState(() {
-      questionnaire = q;
-      currentQuestion = q.questions[0];
+      clean();
+      checkAnswerForCurrentQuestion();
+      controller.text = answer ;
+      if(currentQuestion == QuestionType.DATE_TYPE){
+        List<String> d = answer.split("-");
+        int year = int.parse(d[0]);
+        int month = int.parse(d[1]);
+        int day = int.parse(d[2]);
+        selectedDate = DateTime(year,month,day);
+      }
     });
   }
 
@@ -118,7 +133,6 @@ class _HomeState extends State<Home> {
     setState(() {
       previousQuestions.add(currentQuestion);
       addAnswer();
-      clean();
       int nextQ = 0 ;
       if(currentQuestion.typeId == QuestionType.SINGLE_CHOICE_TYPE){
         if(currentQuestion.selectedOption().nextQuestionId != 0){
@@ -133,8 +147,7 @@ class _HomeState extends State<Home> {
 
       if(nextQ != 0){
         currentQuestion = questionnaire.questions.firstWhere((element) => element.questionId == nextQ) ;
-        checkAnswerForCurrentQuestion();
-        controller.text = answer ;
+        loadCurrentQuestion();
       }
       else {
         showFinishDialog(context,saveAnswers);
@@ -178,6 +191,7 @@ class _HomeState extends State<Home> {
     else {
       existAnswer = Answer(CurrentUser.user, currentQuestion , answer);
     }
+    answerService.saveAnswersToLocal(answers);
   }
 
   changeAnswerText(text){
