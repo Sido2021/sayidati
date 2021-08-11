@@ -59,7 +59,7 @@ class AnswerService{
     var answers_json = jsonEncode(answers.map((e) => e.toJson()).toList());
     print(answers_json);
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool res = await prefs.setString('answers', answers_json);
+    bool result = await prefs.setString('answers', answers_json);
   }
 
   Future<List<Answer>> jsonToList(q , response) async {
