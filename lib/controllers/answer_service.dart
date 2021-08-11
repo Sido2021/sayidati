@@ -6,7 +6,9 @@ import 'package:sayidati/Utilities/constants.dart';
 import 'package:sayidati/data/current_user.dart';
 import 'package:sayidati/models/answer.dart';
 import 'package:sayidati/models/question.dart';
+import 'package:sayidati/models/question_type.dart';
 import 'package:sayidati/models/questionnaire.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AnswerService{
   Future<bool> sendAnswers(QID ,List<Answer> answers, LocationData position) async {
@@ -37,13 +39,37 @@ class AnswerService{
 
     List<Answer> answers =  [] ;
     if (response.statusCode == 200) {
-      Iterable l = json.decode(response.body);
-      answers = await List<Answer>.from(l.map((model)=> Answer.fromJsonAndCurrentUser(model)));
-      answers.forEach((answer) {
-        Question question = q.questions.where((qst) => qst.questionId == answer.question.questionId ).first;
-        answer.question = question;
-      });
+      answers = await jsonToList(q , response.body);
     }
+    return answers;
+  }
+
+  Future<List<Answer>> getAnswersFromLocal(q) async {
+    List<Answer> answers =  [] ;
+    final prefs = await SharedPreferences.getInstance();
+    final answers_json = prefs.getString('answers') ?? "";
+    if(answers_json != ""){
+      print(answers_json);
+      answers = await jsonToList(q,answers_json);
+    }
+    return answers;
+  }
+
+  Future<void> saveAnswersToLocal(List<Answer> answers) async{
+    var answers_json = jsonEncode(answers.map((e) => e.toJson()).toList());
+    print(answers_json);
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool res = await prefs.setString('answers', answers_json);
+  }
+
+  Future<List<Answer>> jsonToList(q , response) async {
+    List<Answer> answers =  [] ;
+    Iterable l = json.decode(response);
+    answers = await List<Answer>.from(l.map((model)=> Answer.fromJsonAndCurrentUser(model)));
+    answers.forEach((answer) {
+      Question question = q.questions.firstWhere((qst) => qst.questionId == answer.question.questionId , orElse: ()=> Question.Empty());
+      if(!question.isEmpty())answer.question = question;
+    });
     return answers;
   }
 }
