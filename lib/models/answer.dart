@@ -1,32 +1,31 @@
 import 'package:sayidati/data/current_user.dart';
 import 'package:sayidati/models/question.dart';
+import 'package:sayidati/models/questionnaire.dart';
 import 'package:sayidati/models/user.dart';
 
 class Answer {
-  User user = CurrentUser.user;
-  Question question = Question.Empty();
-  String answer = "";
+  String answerId = "";
+  String uid = "";
+  String questionnaireId = "";
+  String latitude = "" ;
+  String longitude = "" ;
 
-  Answer(this.user, this.question, this.answer);
-
-  Answer.Empty();
-
-  Answer.fromJsonAndCurrentUser(Map<String, dynamic> json)
-      : user = CurrentUser.user,
-        question = Question.fromID(int.parse(json['QuestionID'])),
-        answer = json['Answer'];
+  Answer(this.answerId,this.uid, this.questionnaireId, this.latitude,this.longitude);
 
   Answer.fromJson(Map<String, dynamic> json)
-      : user = User(json['UID'], json['Email'], json['Name'], json['Gender'],
-            json['DateOfBirth'], json['ImageUrl']),
-        question = Question(json['QuestionID'], json['QuestionTypeId'], json['Title'],json['NextQuestionID'],json['Required']),
-        answer = json['answer'];
+      : answerId = json['AnswerID'],
+        uid = json['UID'],
+        questionnaireId = json['QID'],
+        latitude = json['Latitude'],
+        longitude = json['Longitude']
+        ;
 
   Map<String , dynamic> toJson() => {
-    'UID' : user.uid ,
-    'QuestionID' : question.questionId.toString() ,
-    'Answer' : answer
+    'AnswerID' : answerId,
+    'UID' : uid ,
+    'QID' : questionnaireId,
+    'latitude' : longitude,
+    'longitude' : longitude
   };
 
-  bool isEmpty()=> question.isEmpty() ;
 }

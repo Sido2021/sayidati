@@ -9,6 +9,7 @@ import 'package:sayidati/Utilities/location.dart';
 import 'package:sayidati/controllers/answer_service.dart';
 import 'package:sayidati/data/current_user.dart';
 import 'package:sayidati/models/answer.dart';
+import 'package:sayidati/models/answer_details.dart';
 import 'package:sayidati/models/option.dart';
 import 'package:sayidati/models/question.dart';
 import 'package:sayidati/models/question_type.dart';
@@ -21,10 +22,12 @@ import 'package:sayidati/widgets/question_multiple_choices_list.dart';
 import 'package:sayidati/widgets/question_single_choices_list.dart';
 import 'package:sayidati/widgets/questionnaire_body.dart';
 import 'package:sayidati/widgets/questionnaire_head.dart';
+import 'package:sayidati/widgets/show_progress.dart';
 
 class QuestionnaireReader extends StatefulWidget {
+  Answer answer;
   Questionnaire questionnaire ;
-  QuestionnaireReader(this.questionnaire);
+  QuestionnaireReader(this.answer,this.questionnaire);
   _QuestionnaireReaderState createState() => _QuestionnaireReaderState();
 }
 
@@ -32,18 +35,12 @@ class _QuestionnaireReaderState extends State<QuestionnaireReader> {
 
   Question currentQuestion = Question.Empty();
   bool buttonEnabled = false ;
-  bool firstCall = false ;
-  bool completed = false;
-  bool sendingAnswers = false ;
   String answer= "" ;
-  bool checkedValue = false  ;
-  bool doneStep = false ;
   bool loadCompleted = false ;
   DateTime? selectedDate ;
 
-  List<Answer> answers = [] ;
-  List<Question> previousQuestions = [];
-  TextEditingController controller = TextEditingController();
+  List<AnswerDetails> answerDetailsList = [] ;
+  List<TextEditingController> controllers = [];
 
   @override
   void initState() {
@@ -62,124 +59,65 @@ class _QuestionnaireReaderState extends State<QuestionnaireReader> {
                   children: [
                     Container(
                       width: size.width,
-                      height: size.height * 0.7,
-                      child: loadCompleted ? showQuestionnaire() : showProgress(),
+                      height: size.height ,
+                      child: loadCompleted ? allQuestions() : showProgress(),
                     )
-            ]
-
-      ),
-      ),
+                  ]
+              ),
+          ),
         ),
       ),
     );
   }
 
   void loadQuestionsAnswers() async {
-    await widget.questionnaire.loadQuestions();
     AnswerService answerService = AnswerService();
-    answers = await answerService.getCurrentUserAnswersByQID(widget.questionnaire);
-    currentQuestion = widget.questionnaire.questions[0];
-    loadCompleted = true ;
-    loadCurrentQuestion();
-  }
-
-  showQuestionnaire() {
-    return Center(
-      child: SizedBox.expand(
-          child:
-          Column(
-            children: [
-              QuestionnaireHead(widget.questionnaire),
-              QuestionnaireBody(widget.questionnaire,currentQuestion,answerBox,next,buttonEnabled,previous)
-            ],
-          )
-      ),
-    ) ;
-  }
-
-  answerBox() {
-    switch(currentQuestion.typeId){
-      case 1 : return questionInputBox(changeAnswerText,controller,false);
-      case 2 : return getMultipleChoicesList(currentQuestion,changeAnswerText , answer , false );
-      case 3 : return getSingleChoicesList(currentQuestion , changeOptionsSelection ,answer,false);
-      case 4 : return dateBox(context ,selectedDate , changeDate,false);
-    }
-  }
-
-  next(){
+    answerDetailsList = await answerService.getAnswerDetailsList(widget.answer);
     setState(() {
-      previousQuestions.add(currentQuestion);
-      clean();
-      int nextQ = 0 ;
-      if(currentQuestion.typeId == QuestionType.SINGLE_CHOICE_TYPE){
-        if(currentQuestion.selectedOption().nextQuestionId != 0){
-          nextQ = currentQuestion.selectedOption().nextQuestionId ;
-        }
-      }
-      else {
-        if(currentQuestion.nextQuestionId != 0){
-          nextQ = currentQuestion.nextQuestionId ;
-        }
-      }
-
-      if(nextQ != 0){
-        currentQuestion = widget.questionnaire.questions.firstWhere((element) => element.questionId == nextQ) ;
-        checkAnswerForCurrentQuestion();
-        loadCurrentQuestion();
-      }
-      else {
-        //showFinishDialog(context,saveAnswers);
-      }
+      loadCompleted=true;
     });
   }
 
-  previous(){
-      currentQuestion = previousQuestions.last;
-      previousQuestions.remove(previousQuestions.last);
-      loadCurrentQuestion();
-  }
-
-  loadCurrentQuestion(){
-    setState(() {
-      clean();
-      checkAnswerForCurrentQuestion();
-      controller.text = answer ;
-      if(currentQuestion == QuestionType.DATE_TYPE){
+  answerBox(Question question) {
+    switch(question.typeId){
+      case 1 : return questionInputBox(changeAnswerText,controllers.last,false);
+      case 2 : return getMultipleChoicesList(currentQuestion,changeAnswerText , answer , false );
+      case 3 : return getSingleChoicesList(currentQuestion , changeOptionsSelection ,answer,false);
+      case 4 : {
         List<String> d = answer.split("-");
         int year = int.parse(d[0]);
         int month = int.parse(d[1]);
         int day = int.parse(d[2]);
-        selectedDate = DateTime(year,month,day);
+        DateTime date  = DateTime(year,month,day);
+        return dateBox(context ,date , changeDate,false);
       }
-    });
-  }
-
-  void checkAnswerForCurrentQuestion() {
-    Answer existAnswer = answers.firstWhere((a) => a.question.questionId == currentQuestion.questionId ,orElse: ()=>Answer.Empty());
-    if(!existAnswer.isEmpty()){
-      answer = existAnswer.answer ;
     }
-    buttonEnabled = currentQuestion.required ? (answer == "" ? false : true) : true ;
   }
 
-  void clean() {
-    answer = "";
-    checkedValue =  false ;
-    firstCall = true ;
-  }
-
-  showProgress() {
-    return SpinKitCircle(
-      color: Colors.orangeAccent,
-      size: 50.0,
+  allQuestions(){
+    List<Widget> widgets = [];
+    answerDetailsList.forEach((answerDetails) {
+      currentQuestion = answerDetails.question;
+      answer = answerDetails.answer;
+      if(currentQuestion.typeId == 1){
+        controllers.add(TextEditingController());
+        controllers.last.text = answer;
+      }
+      widgets.add(QuestionnaireBody(widget.questionnaire,currentQuestion,answerBox,next,buttonEnabled,previous,true));
+    });
+    return SingleChildScrollView(
+        child: Padding(
+        padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: widgets,
+          ),
+        )
     );
   }
 
-  changeAnswerText(){
-  }
-  changeOptionsSelection(){
-  }
-  changeDate(){
-  }
-
+  changeAnswerText(){}
+  changeOptionsSelection(){}
+  changeDate(){}
+  next(){}
+  previous(){}
 }

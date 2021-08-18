@@ -1,15 +1,15 @@
 import 'package:sayidati/controllers/question_service.dart';
-import 'package:sayidati/controllers/questionnaire_service.dart';
 import 'package:sayidati/models/question.dart';
 
 class Questionnaire {
-  int QID ;
-  String label ;
-  String dateOfPublish ;
+  int QID = 0 ;
+  String label ="";
+  String dateOfPublish = "";
 
   List<Question> questions = [] ;
 
   Questionnaire(this.QID, this.label, this.dateOfPublish);
+  Questionnaire.Empty();
 
   Questionnaire.fromJson(Map<String , dynamic> json)
       : QID = int.parse(json['QID']),

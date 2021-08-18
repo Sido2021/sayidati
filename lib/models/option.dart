@@ -3,7 +3,7 @@ import 'package:sayidati/models/question.dart';
 class Option {
   int optionId = 0 ;
   String title = "" ;
-  int nextQuestionId = 0;
+  String nextQuestionId = "";
   bool selected = false ;
 
   Option(this.optionId, this.title, this.nextQuestionId);
@@ -13,7 +13,7 @@ class Option {
   :
         optionId = int.parse(json['OptionID']),
         title = json['OptionTitle'] ,
-        nextQuestionId = int.parse(json['NextQuestionID'])
+        nextQuestionId = json['NextQuestionID'].toString()
       ;
 
   Map<String , dynamic> toJson() => {

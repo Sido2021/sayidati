@@ -3,10 +3,10 @@ import 'package:sayidati/models/option.dart';
 import 'package:sayidati/models/question_type.dart';
 
 class Question {
-  int questionId = 0 ;
+  String questionId = "" ;
   int typeId = 0 ;
   String title = "" ;
-  int nextQuestionId  = 0;
+  String nextQuestionId  = "";
   bool required = false;
 
   List<Option> options = [] ;
@@ -15,13 +15,13 @@ class Question {
   Question.fromID(this.questionId);
 
   Question.fromJson(Map<String , dynamic> json)
-      : questionId = int.parse(json['QuestionID']),
-        typeId = int.parse(json['QuestionTypeID']),
+      : questionId = json['QuestionID'],
+        typeId = int.parse(json['QuestionTypeId']),
         title = json['Title'],
-        nextQuestionId = int.parse(json['NextQuestionID']),
+        nextQuestionId = json['NextQuestionID'].toString(),
         required = json['Required'] =="0" ? false : true
   {
-    if(json['options'] !=null)loadOptions(json['options']);
+    if(json['Options'] !=null)loadOptions(json['Options']);
   }
 
   Map<String , dynamic > toJson() => {
@@ -43,12 +43,12 @@ class Question {
 
   Option selectedOption(){
     if(typeId != QuestionType.SINGLE_CHOICE_TYPE){
-      return Option(0, "", 0) ;
+      return Option(0, "", "") ;
     }
     else {
       return options.firstWhere((element) => element.selected);
     }
   }
 
-  bool isEmpty()=> questionId == 0 ;
+  bool isEmpty()=> questionId == "" ;
 }

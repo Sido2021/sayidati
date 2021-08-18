@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sayidati/models/option.dart';
 
-getMultipleChoicesList(currentQuestion , changeAnswerText ,String answer , enabled) {
+getMultipleChoicesList(currentQuestion , changeAnswerText ,String answer , enabled ) {
   List<Option> options = currentQuestion.options ;
+  print("anwser : "+answer);
   if(answer == "") currentQuestion.clearSelection();
   else {
     List<String> answers = answer.split(",");
@@ -13,8 +14,10 @@ getMultipleChoicesList(currentQuestion , changeAnswerText ,String answer , enabl
       option.select();
     });
   }
+
   return ListView.builder(
       scrollDirection: Axis.vertical,
+      physics: enabled ? AlwaysScrollableScrollPhysics() : NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       padding: const EdgeInsets.all(8),
       itemCount: options.length,

@@ -14,12 +14,12 @@ done(context,@required onPress) {
       ),
     ),
     Text(
-      "Done !",
+      "تم !",
       style: TextStyle(fontSize: 8),
     ),
     ElevatedButton(onPressed: () {
       onPress();
-    }, child: Text("OK"))
+    }, child: Text("حسنا"))
   ]
   );
 }

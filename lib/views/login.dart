@@ -38,7 +38,7 @@ class _LoginState extends State<Login> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text(
-                "LOGIN",
+                "تسجيل الدخول",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: size.height * 0.03),
@@ -47,27 +47,33 @@ class _LoginState extends State<Login> {
                 height: size.height * 0.35,
               ),
               SizedBox(height: size.height * 0.03),
-              TextField(
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    hintText: "Email"),
-                onChanged: (value) {
-                  textEditingController[0].text = value;
-                },
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      hintText: "البريد الإلكتروني"),
+                  onChanged: (value) {
+                    textEditingController[0].text = value;
+                  },
+                ),
               ),
               SizedBox(height: size.height * 0.02),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    hintText: "Password"),
-                onChanged: (value) {
-                  textEditingController[1].text = value;
-                },
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      hintText: "كلمة السر"),
+                  onChanged: (value) {
+                    textEditingController[1].text = value;
+                  },
+                ),
               ),
               SizedBox(height: size.height * 0.02),
               !inProcessing
@@ -81,7 +87,7 @@ class _LoginState extends State<Login> {
                     goTo(context , SignUp());
                   },
                   child: Text(
-                    "Create New Account",
+                    "إنشاء حساب جديد",
                     style: TextStyle(color: Colors.orangeAccent),
                   )
               ),
@@ -96,6 +102,7 @@ class _LoginState extends State<Login> {
     setState(() {
       inProcessing = true;
     });
+    print(email+"--"+password);
     AuthenticationService authenticationService = AuthenticationService();
     User user = await authenticationService.signin(email, password);
 
@@ -124,7 +131,7 @@ class _LoginState extends State<Login> {
         onPressed: () {
           login(textEditingController[0].text, textEditingController[1].text);
         },
-        child: Text("Login"));
+        child: Text("الدخول"));
   }
 
   Future<void> saveUidInLocalStorage(uid) async {

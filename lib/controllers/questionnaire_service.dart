@@ -16,6 +16,18 @@ class QuestionnaireService{
     }
   }
 
+  Future<List<Questionnaire>> getAllQuestionnaires() async {
+    final response = await get(Uri.parse(Constants.BASE_URL+"get_all_questionnaires.php"));
+
+    List<Questionnaire> questionnaires = [] ;
+    if (response.statusCode == 200) {
+      print(response.body);
+      Iterable l = json.decode(response.body);
+      questionnaires = await List<Questionnaire>.from(l.map((model)=> Questionnaire.fromJson(model)));
+    }
+    return questionnaires;
+  }
+
 
   Future<List<Questionnaire>> getUserQuestionnaires() async {
     final response = await post(Uri.parse(Constants.BASE_URL+'get_questionnaires_by_user.php'),

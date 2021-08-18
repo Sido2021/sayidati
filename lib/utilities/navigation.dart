@@ -9,3 +9,7 @@ goTo(context , page){
   Navigator.push(
       context, MaterialPageRoute(builder: (context) => page));
 }
+
+finish(context){
+  Navigator.pop(context);
+}

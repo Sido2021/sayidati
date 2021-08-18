@@ -15,6 +15,7 @@ getSingleChoicesList(currentQuestion , Function changeOptionSelection , answer ,
 
   return ListView.builder(
       scrollDirection: Axis.vertical,
+      physics: enabled ? AlwaysScrollableScrollPhysics() :NeverScrollableScrollPhysics() ,
       shrinkWrap: true,
       padding: const EdgeInsets.all(8),
       itemCount: options.length,

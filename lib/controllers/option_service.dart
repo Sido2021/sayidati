@@ -8,10 +8,9 @@ class OptionService{
   Future<List<Option>> getOptions(int QuestionID) async {
     List<Option> options = [] ;
     final response = await post(Uri.parse(Constants.BASE_URL+'get_options.php'),
-        body: jsonEncode(<String, int>{
+        body: <String, int>{
           'QuestionID': QuestionID
         }
-        )
     );
 
     if (response.statusCode == 200) {
