@@ -52,7 +52,6 @@ class _HomeState extends State<Home> {
     questionnaires = await questionnaireService.getAllQuestionnaires();
     questionnaires_loaded = true ;
     setState(() {
-      print(questionnaires.length);
     });
   }
 

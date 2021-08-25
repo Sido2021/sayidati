@@ -31,4 +31,21 @@ class Questionnaire {
   bool isFirstQuestion(question){
     return questions.indexOf(question) == 0;
   }
+
+  void clearAllQuestionsAnswers() {
+    questions.forEach((question) {
+        question.answer = "";
+        question.options.forEach((option) {
+            option.nextQuestion.answer = "";
+        });
+    });
+  }
+
+  List<Question> getQuestionsCopies() {
+    List<Question> qs = [] ;
+    questions.forEach((question) {
+      qs.add(Question.copy(question));
+    });
+    return qs ;
+  }
 }

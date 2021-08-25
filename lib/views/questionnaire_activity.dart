@@ -12,6 +12,10 @@ import 'package:sayidati/models/option.dart';
 import 'package:sayidati/models/question.dart';
 import 'package:sayidati/models/question_type.dart';
 import 'package:sayidati/models/questionnaire.dart';
+import 'package:sayidati/utilities/constants.dart';
+import 'package:sayidati/widgets/questionnaire_navigation_buttons.dart';
+import 'package:sayidati/widgets/questionnaire_save_button.dart';
+import '../utilities/variable.dart';
 import 'package:sayidati/utilities/location.dart';
 import 'package:sayidati/utilities/navigation.dart';
 import 'package:sayidati/views/questionnaire_reader.dart';
@@ -33,25 +37,21 @@ class QuestionnaireActivity extends StatefulWidget {
 
 class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
 
-  String label = "";
-  Question currentQuestion = Question.Empty();
   String buttonText = "Next" ;
-  bool buttonEnabled = false ;
-  bool firstCall = false ;
   bool completed = false;
   bool sendingAnswers = false ;
-  String answer= "" ;
   bool checkedValue = false  ;
   bool doneStep = false ;
   bool questions_loaded = false ;
-  DateTime? selectedDate ;
+  Variable v = Variable();
+  int operationMode = Constants.CREATE;
 
-  List<AnswerDetails> answers = [] ;
   List<Question> previousQuestions = [];
-  TextEditingController controller = TextEditingController();
 
   List<Answer> userAnswers = [] ;
   AnswerService answerService = AnswerService();
+
+  Answer currentAnswer = Answer.newAnswer();
 
   @override
   void initState() {
@@ -95,7 +95,7 @@ class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
     questions_loaded = true ;
     if(widget.questionnaire.questions.length > 0){
       userAnswers = await answerService.getCurrentUserAnswersByQID(widget.questionnaire);
-      currentQuestion = widget.questionnaire.questions[0];
+      v.currentQuestion = widget.questionnaire.questions[0];
       loadCurrentQuestion();
     }
     else {
@@ -106,15 +106,8 @@ class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
   loadCurrentQuestion(){
     setState(() {
       clean();
-      checkAnswerForCurrentQuestion();
-      controller.text = answer ;
-      if(currentQuestion == QuestionType.DATE_TYPE){
-        List<String> d = answer.split("-");
-        int year = int.parse(d[0]);
-        int month = int.parse(d[1]);
-        int day = int.parse(d[2]);
-        selectedDate = DateTime(year,month,day);
-      }
+      //checkAnswerForCurrentQuestion();
+    //v.currentQuestion.setAnswerToController();
     });
   }
 
@@ -125,42 +118,35 @@ class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
           Column(
             children: [
               QuestionnaireHead(widget.questionnaire),
-              QuestionnaireBody(widget.questionnaire,currentQuestion,answerBox,next,buttonEnabled,previous,false)
+              QuestionnaireBody(context,v,widget.questionnaire,changeAnswerText),
+              QuestionnaireNavigationButtons(v,widget.questionnaire,next,previous),
+              QuestionnaireSaveButton(v,widget.questionnaire,save),
             ],
           )
       ),
     ) ;
   }
 
-  answerBox(Question question) {
-    switch(question.typeId){
-      case 1 : return questionInputBox(changeAnswerText,controller,true);
-      case 2 : return getMultipleChoicesList(currentQuestion,changeAnswerText , answer , true);
-      case 3 : return getSingleChoicesList(currentQuestion , changeOptionsSelection ,answer,true);
-      case 4 : return dateBox(context ,selectedDate , changeDate,true);
-    }
-  }
-
   next(){
     setState(() {
-      previousQuestions.add(currentQuestion);
       addAnswer();
-      String nextQ = "" ;
-      print(currentQuestion.nextQuestionId);
-      if(currentQuestion.typeId == QuestionType.SINGLE_CHOICE_TYPE){
-        if(currentQuestion.selectedOption().nextQuestionId != "" && currentQuestion.selectedOption().nextQuestionId != "null"){
-          nextQ = currentQuestion.selectedOption().nextQuestionId ;
+      Question nextQuestion = Question.Empty();
+      if(v.currentQuestion.typeId == QuestionType.SINGLE_CHOICE_TYPE){
+        Question nextQ = v.currentQuestion.selectedOptions().first.nextQuestion ;
+        if(nextQ.isEmpty()){
+          nextQuestion = findQuestionByCurrentQuestion();}
+        else {
+          nextQuestion = nextQ;
         }
       }
       else {
-        if(currentQuestion.nextQuestionId != "" && currentQuestion.nextQuestionId != "null"){
-          nextQ = currentQuestion.nextQuestionId ;
-        }
-      }
+        nextQuestion = findQuestionByCurrentQuestion();
+       }
 
-      if(nextQ != ""){
-        currentQuestion = widget.questionnaire.questions.firstWhere((element) => element.questionId == nextQ) ;
-        loadCurrentQuestion();
+      if(!nextQuestion.isEmpty()){
+        previousQuestions.add(v.currentQuestion);
+        v.currentQuestion = nextQuestion;
+       loadCurrentQuestion();
       }
       else {
         showFinishDialog(context,saveAnswers);
@@ -168,59 +154,49 @@ class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
     });
   }
 
+  Question findQuestionByCurrentQuestion(){
+    String nq = v.currentQuestion.nextQuestionId ;
+    return widget.questionnaire.questions.firstWhere((element) => element.questionId == nq,orElse:()=> Question.Empty()) ;
+  }
+
   previous(){
     setState(() {
-      currentQuestion = previousQuestions.last;
+      v.currentQuestion = previousQuestions.last;
       previousQuestions.remove(previousQuestions.last);
       clean();
-      checkAnswerForCurrentQuestion();
-      controller.text = answer ;
+      //checkAnswerForCurrentQuestion();
+      //v.currentQuestion.setAnswerToController();
     });
   }
 
-  void changeOptionsSelection(Option option) {
+  /*void changeOptionsSelection(Option option) {
     setState(() {
-      currentQuestion.clearSelection();
+      v.currentQuestion.clearSelection();
       option.select();
       changeAnswerText(option.optionId.toString());
       //checkLastQuestion();
     });
-  }
-
-  changeDate(pickedDate){
-    if (pickedDate != null && pickedDate != selectedDate)
-      setState(() {
-        selectedDate = pickedDate;
-        answer = selectedDate!.year.toString()+"-"+selectedDate!.month.toString()+"-"+selectedDate!.day.toString();
-        buttonEnabled = currentQuestion.required ? (answer == "" ? false : true) : true ;
-      });
-    print(answer);
-  }
+  }*/
 
   void addAnswer() {
-    AnswerDetails existAnswer = answers.firstWhere((a) => a.question.questionId == currentQuestion.questionId ,orElse: ()=>AnswerDetails.Empty());
-    if(existAnswer.isEmpty()){
-      answers.add(AnswerDetails(currentQuestion , answer));
-      print(currentQuestion.questionId+"......"+answer);
+    Question existQuestionAnswer = currentAnswer.questionsAnswers.firstWhere((q) => q.questionId == v.currentQuestion.questionId ,orElse: ()=>Question.Empty());
+    if(existQuestionAnswer.isEmpty()){
+      currentAnswer.questionsAnswers.add(v.currentQuestion);
     }
     else {
-      existAnswer = AnswerDetails(currentQuestion , answer);
+      existQuestionAnswer = v.currentQuestion;
     }
     //answerService.saveAnswersToLocal(answers,widget.questionnaire.QID);
   }
 
-  changeAnswerText(text){
+  changeAnswerText(String text,Question q){
     setState(() {
-      answer = text;
-      buttonEnabled = currentQuestion.required ? (answer == "" ? false : true) : true ;
-      firstCall = false ;
+      v.currentQuestion.answer = text;
     });
   }
 
   void clean() {
-    answer = "";
     checkedValue =  false ;
-    firstCall = true ;
   }
 
   saveAnswers() async {
@@ -234,30 +210,25 @@ class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
         });
         LocationData position = await currentLocation.getCurrentPosition();
         AnswerService answerService = AnswerService();
-        bool answersSent = await answerService.sendAnswers(widget.questionnaire.QID , answers , position);
-        print(answersSent);
-        setState(() {
-          /*sendingAnswers = false ;
-          if(answersSent) setState(() {
-            doneStep = true ;
-            CurrentUser.user.answeredLastQuestionnaire = true;
-            answerService.removeAnswersFromLocal(widget.questionnaire.QID);
+        bool answersSent = await answerService.sendAnswers(widget.questionnaire.QID , currentAnswer , position.latitude.toString() , position.longitude.toString());
+        if(answersSent){
+          goBack(context);
+        }else{
+          setState(() {
+            sendingAnswers = false ;
           });
-          else print("answers didn't send ...");*/
-          finish(context);
-        });
+        }
       }
     }
 
   }
 
-  void checkAnswerForCurrentQuestion() {
-    AnswerDetails existAnswer = answers.firstWhere((a) => a.question.questionId == currentQuestion.questionId ,orElse: ()=>AnswerDetails.Empty());
-    if(!existAnswer.isEmpty()){
-      answer = existAnswer.answer ;
+  /*void checkAnswerForCurrentQuestion() {
+    Question existQuestionAnswer = currentAnswer.questionsAnswers.firstWhere((q) => q.questionId == v.currentQuestion.questionId ,orElse: ()=>Question.Empty());
+    if(!existQuestionAnswer.isEmpty()){
+      v.currentQuestion.answer = existQuestionAnswer.answer ;
     }
-    buttonEnabled = currentQuestion.required ? (answer == "" ? false : true) : true ;
-  }
+  }*/
 
   donePress(){
     setState(() {
@@ -288,9 +259,14 @@ class _QuestionnaireActivityState extends State<QuestionnaireActivity> {
                 },
               ),
             )
-
         );
       },
     );
   }
+
+  void save(){
+    addAnswer();
+    showFinishDialog(context,saveAnswers);
+  }
+
 }

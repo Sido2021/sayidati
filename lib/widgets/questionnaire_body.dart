@@ -1,10 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:sayidati/models/option.dart';
-import 'package:sayidati/models/question.dart';
+import 'package:sayidati/utilities/variable.dart';
 
-QuestionnaireBody(questionnaire,currentQuestion,answerBox,next,buttonEnabled,previous,viewMode){
-  return Card(
+import 'question_input_box.dart';
+import 'date_box.dart';
+import 'question_multiple_choices_list.dart';
+import 'question_single_choices_list.dart';
+
+QuestionnaireBody(BuildContext context ,Variable v,questionnaire,changeAnswerText){
+ return Card(
+   color: v.isCreateMode() ? Colors.white : (v.currentQuestion.hasAnswer() ? Colors.green[100]:Colors.red[100]) ,
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Padding(
@@ -13,56 +18,46 @@ QuestionnaireBody(questionnaire,currentQuestion,answerBox,next,buttonEnabled,pre
             children: [
               Container(
                   width: double.infinity,
-                  constraints: BoxConstraints(minHeight: 200),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Text(currentQuestion.title,textAlign: TextAlign.center,),
-                          SizedBox(
-                            height: 50,
-                            child:Center(
-                              child: Text(
-                                !viewMode ? currentQuestion.required ?" *" : "" : "",
-                                style: TextStyle(
-                                  color: Colors.redAccent
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      answerBox(currentQuestion)
+                      getQuestionHead(v),
+                      getAnswerBox(context,v,changeAnswerText)
                     ],
                   )
               ),
-              !viewMode ? Stack(
-                  children: [
-                    !questionnaire.isFirstQuestion(currentQuestion) ? Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                          onPressed: (){
-                            previous();
-                          },
-                          child: Text("السابق")
-                      ),
-                    ) : SizedBox(),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(primary: buttonEnabled ? Colors.orangeAccent : Colors.orange[100]),
-                        onPressed: (){
-                          if(buttonEnabled) next();
-                        },
-                        child: Text("التالي")
-                      ),
-                    ),
-
-                  ],
-                ) : SizedBox(height: 0),
             ],
           ),
         ),
       )
   );
+}
+
+getQuestionHead(Variable v){
+  return Row(
+    children: [
+      Text(v.currentQuestion.title,textAlign: TextAlign.center,),
+      SizedBox(
+        height: 50,
+        child:Center(
+          child: Text(
+            v.editable ? v.currentQuestion.required ?" *" : "" : "",
+            style: TextStyle(
+                color: Colors.redAccent
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+
+getAnswerBox(BuildContext context ,Variable v,changeAnswerText) {
+  int type = v.currentQuestion.typeId;
+  switch(type){
+    case 1 : return questionInputBox(v,changeAnswerText);
+    case 2 : return getMultipleChoicesList(v,changeAnswerText);
+    case 3 : return getSingleChoicesList(v,changeAnswerText);
+    case 4 : return dateBox(context ,v,changeAnswerText);
+  }
 }

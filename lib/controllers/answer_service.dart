@@ -14,16 +14,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class AnswerService{
-  Future<bool> sendAnswers(QID ,List<AnswerDetails> answers, LocationData position) async {
-    print(jsonEncode(answers));
+  Future<bool> sendAnswers(QID ,Answer answer, latitude , longitude ) async {
+    print(jsonEncode(answer.questionsAnswers));
     final response = await post(Uri.parse(Constants.BASE_URL+'save_answers.php'),
         body: <String, String>{
-          'AnswerID' : Uuid().v4(),
+          'AnswerID' :answer.answerId,
           'UID' : CurrentUser.user.uid,
           'QID' : QID.toString() ,
-          'latitude' : position.latitude.toString() ,
-          'longitude' : position.longitude.toString() ,
-          'answers': jsonEncode(answers)
+          'latitude' : latitude,
+          'longitude' : longitude ,
+          'answers': jsonEncode(answer.questionsAnswers)
         }
     );
 
@@ -50,16 +50,15 @@ class AnswerService{
     return answers;
   }
 
-  Future<List<AnswerDetails>> getAnswerDetailsList(Answer answer) async {
+  Future<List<Question>> getQuestionsAnswers(Answer answer) async {
     final response = await post(Uri.parse(Constants.BASE_URL+'get_answer_details_list.php'),
         body: <String, String>{
           'AnswerID' : answer.answerId ,
         }
     );
 
-    List<AnswerDetails> answersDetailsList =  [] ;
+    List<Question> answersDetailsList =  [] ;
     if (response.statusCode == 200) {
-      print(response.body);
       answersDetailsList = await jsonToAnswerDetailsList(response.body);
     }
     return answersDetailsList;
@@ -78,7 +77,6 @@ class AnswerService{
 
   Future<void> saveAnswersToLocal(List<Answer> answers , QID) async{
     var answers_json = jsonEncode(answers.map((e) => e.toJson()).toList());
-    print(answers_json);
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     bool result = await prefs.setString('answers-'+QID.toString(), answers_json);
   }
@@ -93,10 +91,10 @@ class AnswerService{
     answers = await List<Answer>.from(l.map((model)=> Answer.fromJson(model)));
     return answers;
   }
-  Future<List<AnswerDetails>> jsonToAnswerDetailsList(response) async {
-    List<AnswerDetails> answersDetailsList =  [] ;
+  Future<List<Question>> jsonToAnswerDetailsList(response) async {
+    List<Question> answersDetailsList =  [] ;
     Iterable l = json.decode(response);
-    answersDetailsList = await List<AnswerDetails>.from(l.map((model)=> AnswerDetails.fromJson(model)));
+    answersDetailsList = await List<Question>.from(l.map((model)=> Question.fromJson(model['Question'])));
     return answersDetailsList;
   }
 }

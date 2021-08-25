@@ -1,13 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sayidati/models/option.dart';
+import 'package:sayidati/models/question.dart';
+import 'package:sayidati/utilities/variable.dart';
 
-getMultipleChoicesList(currentQuestion , changeAnswerText ,String answer , enabled ) {
-  List<Option> options = currentQuestion.options ;
-  print("anwser : "+answer);
-  if(answer == "") currentQuestion.clearSelection();
+getMultipleChoicesList(Variable v , changeAnswerText ) {
+  Question question =  v.currentQuestion;
+  List<Option> options = v.currentQuestion.options ;
+  if(!v.currentQuestion.hasAnswer()) v.currentQuestion.clearSelection();
   else {
-    List<String> answers = answer.split(",");
+    List<String> answers = v.currentQuestion.answer.split(",");
     answers.forEach((element) {
       int optionId = int.parse(element);
       Option option = options.firstWhere((o) => o.optionId == optionId , orElse: () => Option.Empty());
@@ -17,21 +19,21 @@ getMultipleChoicesList(currentQuestion , changeAnswerText ,String answer , enabl
 
   return ListView.builder(
       scrollDirection: Axis.vertical,
-      physics: enabled ? AlwaysScrollableScrollPhysics() : NeverScrollableScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       padding: const EdgeInsets.all(8),
       itemCount: options.length,
-      itemBuilder: (BuildContext context, int index) {
+      itemBuilder: (BuildContext context, int i) {
         return Container(
             height: 50,
             child:
             CheckboxListTile(
-              title: Text(options[index].title),
-              value: options[index].selected,
+              title: Text(options[i].title),
+              value: options[i].selected,
               onChanged: (newValue) {
-                if(enabled){
-                  options[index].selected = newValue!;
-                  changeAnswerText(getAnswerText(options));
+                if(v.editable){
+                  options[i].selected = newValue!;
+                  changeAnswerText(getAnswerText(options),question);
                 }
               },
               controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox

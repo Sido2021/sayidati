@@ -5,9 +5,17 @@ class Option {
   String title = "" ;
   String nextQuestionId = "";
   bool selected = false ;
+  Question nextQuestion = Question.Empty();
 
   Option(this.optionId, this.title, this.nextQuestionId);
   Option.Empty();
+  Option.copy(Option option){
+    this.optionId = option.optionId ;
+    this.title = option.title ;
+    this.nextQuestionId = option.nextQuestionId;
+    this.selected = option.selected;
+    this.nextQuestion = Question.copy(option.nextQuestion);
+  }
 
   Option.fromJson(Map<String , dynamic> json)
   :
@@ -24,4 +32,8 @@ class Option {
 
   select(){selected = true;}
   deselect(){selected = false;}
+
+  bool hasNextQuestion(){
+    return nextQuestionId != "" && nextQuestionId != "null" ;
+  }
 }

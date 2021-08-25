@@ -11,6 +11,7 @@ import 'package:sayidati/Utilities/navigation.dart';
 import 'package:sayidati/controllers/inscription_service.dart';
 import 'package:sayidati/controllers/upload_service.dart';
 import 'package:sayidati/models/user.dart';
+import 'package:sayidati/utilities/variable.dart';
 import 'package:sayidati/views/login.dart';
 import 'package:sayidati/widgets/background.dart';
 import 'package:sayidati/widgets/date_box.dart';
@@ -37,11 +38,12 @@ class _SignUpState extends State<SignUp> {
     TextEditingController(),
     TextEditingController()
   ];
-  DateTime? selectedDate ;
   String dateOfBirth = "" ;
   String gender = "1" ;
 
   bool registered = false ;
+
+  Variable v = Variable();
 
   @override
   Widget build(BuildContext context) {
@@ -132,11 +134,9 @@ class _SignUpState extends State<SignUp> {
     return AssetImage("assets/images/ic_profile.jpg");
   }
 
-  changeDate(pickedDate){
-    if (pickedDate != null && pickedDate != selectedDate)
+  changeDate(d){
       setState(() {
-        selectedDate = pickedDate;
-        dateOfBirth = selectedDate!.year.toString()+"-"+selectedDate!.month.toString()+"-"+selectedDate!.day.toString();
+        dateOfBirth = d;
       });
   }
 
@@ -180,7 +180,7 @@ class _SignUpState extends State<SignUp> {
         },
       ),
       SizedBox(height: size.height * 0.03),
-      dateBox(context ,selectedDate , changeDate, true),
+      dateBox(context,v, changeDate),
       SizedBox(height: size.height * 0.03),
 
       Center(
@@ -192,7 +192,6 @@ class _SignUpState extends State<SignUp> {
               color: Colors.white, fontWeight: FontWeight.normal),
           onChanged: (Gender? g) {
             gender = (g!.index+1).toString() ;
-            print(gender);
           },
           equallyAligned: true,
           femaleText: "",

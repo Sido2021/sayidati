@@ -102,7 +102,6 @@ class _LoginState extends State<Login> {
     setState(() {
       inProcessing = true;
     });
-    print(email+"--"+password);
     AuthenticationService authenticationService = AuthenticationService();
     User user = await authenticationService.signin(email, password);
 

@@ -21,7 +21,6 @@ class QuestionnaireService{
 
     List<Questionnaire> questionnaires = [] ;
     if (response.statusCode == 200) {
-      print(response.body);
       Iterable l = json.decode(response.body);
       questionnaires = await List<Questionnaire>.from(l.map((model)=> Questionnaire.fromJson(model)));
     }
@@ -38,7 +37,6 @@ class QuestionnaireService{
 
     List<Questionnaire> questionnaires =  [] ;
     if (response.statusCode == 200) {
-      print(response.body);
       Iterable l = json.decode(response.body);
       questionnaires = await List<Questionnaire>.from(l.map((model)=> Questionnaire.fromJson(model)));
     }

@@ -14,10 +14,26 @@ class QuestionService{
     );
 
     if (response.statusCode == 200) {
-      print(response.body);
       Iterable l = json.decode(response.body);
       questions = await List<Question>.from(l.map((model)=> Question.fromJson(model)));
+      await organisation(questions);
+
     }
     return questions;
+  }
+
+  Future<void> organisation(questions) async {
+    for(int i = 0 ; i<questions.length ; i++){
+      Question question = questions[i];
+      question.options.forEach((option) {
+        if(option.hasNextQuestion()){
+          Question targetQuestion = questions.firstWhere((q) => q.questionId == option.nextQuestionId , orElse: ()=> Question.Empty() );
+          if(!targetQuestion.isEmpty()){
+            option.nextQuestion = targetQuestion ;
+            questions.remove(targetQuestion);
+          }
+        }
+      });
+    }
   }
 }

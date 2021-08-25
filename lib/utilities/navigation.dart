@@ -10,6 +10,6 @@ goTo(context , page){
       context, MaterialPageRoute(builder: (context) => page));
 }
 
-finish(context){
+goBack(context){
   Navigator.pop(context);
 }

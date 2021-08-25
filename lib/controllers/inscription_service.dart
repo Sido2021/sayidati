@@ -7,7 +7,6 @@ import 'package:sayidati/models/user.dart';
 class InscriptionService{
   Future<bool> signUp(User user , password) async {
     String user_json = jsonEncode(user);
-    print(user_json);
     final response = await post(Uri.parse(Constants.BASE_URL+'signup.php'),
         body: <String, String>{
           'user': user_json,
